@@ -4,5 +4,6 @@
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.5.1"]
-                 [instaparse "1.2.11"]
-                 [midje "1.6-beta1"]])
+                 [instaparse "1.2.11"]]
+  :profiles {:dev {:dependencies [[midje "1.6-beta1"]]
+                   :plugins      [[lein-midje "3.0.0"]]}})
