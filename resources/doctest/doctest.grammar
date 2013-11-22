@@ -1,0 +1,11 @@
+DOCTEST = TEST+
+TEST = DESC EXPR OUT
+DESC = (!EXPR ANYLINE)*
+EXPR = INDENT <NS> <'=>'> LINE EXPR_CONT*
+<EXPR_CONT> = <INDENT> <'#_=>'> LINE
+NS = '  ' | (#'[a-zA-Z]' #'[a-zA-Z*+!-_?]'*)
+OUT = !EXPR_CONT LINE+ <BLANKLINE>
+<ANYLINE> = LINE | BLANKLINE
+<LINE> = #'.+' <BLANKLINE>
+<BLANKLINE> = <'\n' | #'$'>
+INDENT = #'([ \t](?! =>))*'

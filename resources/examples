@@ -1,0 +1,31 @@
+A single line description
+
+    => (+ 1 2 3)
+  6
+
+Multi line description
+followed by multi line expression
+followed by multi line result
+followed by another expression and result
+  user=> (do (println
+    #_=>      "very magic")
+    #_=>     1)
+  very magic
+  1
+
+    => (- 4 3)
+  1
+
+Blanklines and EOF:
+  user=> (do (println))
+  <BLANKLINE>
+
+Unindented example
+  =>1
+1
+
+Unindented multiline example
+  =>(do
+#_=> (println 2))
+2
+nil
