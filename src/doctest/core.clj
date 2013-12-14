@@ -1,5 +1,8 @@
 (ns doctest.core
   (:require [instaparse.core :as insta]
+            [doctest.input :refer :all]
+            [doctest.util :refer :all]
+            [reply.main :refer [launch-standalone]]
             [clojure.string :as string]
             [clojure.java.io :refer [resource]]))
 
@@ -30,7 +33,7 @@
 
          (let [os (process-output indent os)]
            (zipmap [:desc :expr :out]
-                   (map #(string/join \newline %)
+                   (map join-lines
                         [ds es os]))))
        tests))
 
@@ -40,7 +43,7 @@
   Returns a list of {:desc description :expr expr :out output} maps:
     => (extract-examples
   #_=>  \"=> (+ 1 3)\\n4\")
-  ({:out \"4\", :expr \" (+ 1 3)\", :desc \"\"})"
+  ({:out \"4\n\", :expr \" (+ 1 3)\", :desc \"\"})"
 
   [s]
   (let [parseresult (docparser s)]
@@ -51,13 +54,39 @@
 (defn check-exception [e test]
   false)
 
+(defn group-outs
+  "Separate 'typed' input and the output from a repl log."
+  [repl-output]
+  (into {}
+    (map (fn [[k v]] [k (join-lines v)])
+         (group-by #(if (re-matches #"^\s*([a-zA-Z.*+!_?-]*|#_)=>.*" %)
+                      :in
+                      :out)
+                   (string/split-lines repl-output)))))
+
 (defn eval-expr [expr]
-  (with-out-str
-    ((comp println eval read-string) expr)))
+  (let [repl-output (->stdout)
+        repl-input  (->stdin expr)]
+    (binding [*ns* (find-ns 'user)
+              *out* (->writer repl-output)
+              *in*  repl-input]
+      (with-redefs [reply.main/say-goodbye (fn [])]
+        (launch-standalone {:input-stream repl-input
+                            :output-stream repl-output
+                            :blink-parens false
+                            :skip-default-init true})))
+    (let [outs (.toString repl-output)]
+      (merge {:full outs}
+             (group-outs outs)))))
+
 
 (defn run-test [test]
-  (try
-    (= (:out test)
-       (eval-expr (:expr test)))
-    (catch Exception e
-      (check-exception e test))))
+  (let [result (eval-expr (:expr test))
+        matches (= (:out test) (:out result))]
+    (when-not matches
+      (println "Failed doctest:")
+      (println "---------------")
+      (println (:full matches))
+      (println "---------------")
+      (println "does not match expected output:")
+      (println (:out test)))))

@@ -19,6 +19,7 @@ followed by another expression and result
 Blanklines and EOF:
   user=> (do (println))
   <BLANKLINE>
+  nil
 
 Unindented example
   =>1
